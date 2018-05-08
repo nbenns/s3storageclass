@@ -64,7 +64,7 @@ object Main extends App {
       .runForeach { case (key, res) => println(s"Updated storageClass on $key - ${res.getLastModifiedDate}") }
       .onComplete { tryRes =>
         tryRes match {
-          case Success(res) => println("All Done!")
+          case Success(_) => println("All Done!")
           case Failure(ex) => system.log.error(ex, "Failed :(")
         }
         system.terminate()
