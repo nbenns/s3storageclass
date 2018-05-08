@@ -42,16 +42,21 @@ object Main extends App {
     val srcKey = listBucketResult.key
     val destBucket = srcBucket
     val destKey = srcKey
-
     val cor = new CopyObjectRequest(srcBucket, srcKey, destBucket, destKey)
     cor.setStorageClass(StorageClass.Standard)
 
-    Future {
-      blocking {
-        val res = awsS3Client.copyObject(cor)
-        (destKey, res)
+    def performAction(retry: Int = 0): Future[(String, CopyObjectResult)] =
+      Future {
+        blocking {
+          val res = awsS3Client.copyObject(cor)
+          (destKey, res)
+        }
+      }.recoverWith[(String, CopyObjectResult)] {
+        case _ if retry < 3 => performAction(retry + 1)
+        case ex => Future.failed(ex)
       }
-    }
+
+    performAction()
   }
 
   if (args.length == 0) {
