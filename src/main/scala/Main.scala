@@ -52,8 +52,12 @@ object Main extends App {
           (destKey, res)
         }
       }.recoverWith[(String, CopyObjectResult)] {
-        case _ if retry < 3 => performAction(retry + 1)
-        case ex => Future.failed(ex)
+        case _ if retry < 3 =>
+          println(s"Retry: $retry for $srcKey")
+          performAction(retry + 1)
+        case ex =>
+          println(s"failed after 3 retries for $srcKey")
+          Future.failed(ex)
       }
 
     performAction()
