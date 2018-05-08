@@ -10,6 +10,8 @@ import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import scala.concurrent.{Future, blocking}
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
+import akka.stream.ActorAttributes.supervisionStrategy
+import akka.stream.Supervision.resumingDecider
 
 object Main extends App {
   implicit val system = ActorSystem("s3storageclass")
@@ -60,7 +62,8 @@ object Main extends App {
 
     s3Client.listBucket(bucketName, None)
       .filter(_.storageClass == StorageClass.StandardInfrequentAccess.toString)
-      .mapAsyncUnordered(100)(updateStorageClass)
+      .mapAsyncUnordered(25)(updateStorageClass)
+      .withAttributes(supervisionStrategy(resumingDecider))
       .runForeach { case (key, res) => println(s"Updated storageClass on $key - ${res.getLastModifiedDate}") }
       .onComplete { tryRes =>
         tryRes match {
