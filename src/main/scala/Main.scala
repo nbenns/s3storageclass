@@ -3,11 +3,10 @@ import akka.stream.ActorMaterializer
 import akka.stream.alpakka.s3.impl.ListBucketVersion2
 import akka.stream.alpakka.s3.scaladsl.{ListBucketResultContents, S3Client}
 import akka.stream.alpakka.s3.{MemoryBufferType, S3Settings}
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, DefaultAWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider}
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.DefaultAwsRegionProviderChain
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
-
 import scala.concurrent.{Future, blocking}
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
