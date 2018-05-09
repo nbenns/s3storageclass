@@ -43,13 +43,15 @@ object Main extends App {
 
           Try(awsS3Client.listObjectsV2(lor))
             .recoverWith {
-              case _ if retry > 0 => getMoreWithRetry(retry - 1)
+              case _ if retry > 0 =>
+                println(s"Retry S3 Get Items: #${3 - retry}")
+                getMoreWithRetry(retry - 1)
               case ex => Failure(ex)
             }
         }
 
         getMoreWithRetry().foreach { res =>
-          continuationToken = Option(res.getContinuationToken)
+          continuationToken = Option(res.getNextContinuationToken)
           items = items ++ res.getObjectSummaries.asScala.toList
         }
       }
