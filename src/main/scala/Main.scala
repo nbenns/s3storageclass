@@ -19,8 +19,6 @@ object Main extends App {
 
   val awsCredentialsProvider = new DefaultAWSCredentialsProviderChain()
   val regionProvider = new DefaultAwsRegionProviderChain()
-
-  // Copy objects must be done with the AWS S3Client
   val awsS3Client: AmazonS3 = AmazonS3ClientBuilder.standard().build()
 
   def s3Iterable(bucketName: String, initialStartAfter: Option[String]): scala.collection.immutable.Iterable[S3ObjectSummary] = new scala.collection.immutable.Iterable[S3ObjectSummary] {
@@ -88,7 +86,7 @@ object Main extends App {
           val res = awsS3Client.copyObject(cor)
           (destKey, res)
         }
-      }.recoverWith[(String, CopyObjectResult)] {
+      }.recoverWith {
         case _ if retry < 3 =>
           println(s"Retry: $retry for $srcKey")
           performAction(retry + 1)
