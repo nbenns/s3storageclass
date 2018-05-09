@@ -11,6 +11,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.{Future, blocking}
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
+import scala.collection.immutable.Iterable
 
 object Main extends App {
   implicit val system = ActorSystem("s3storageclass")
@@ -21,7 +22,7 @@ object Main extends App {
   val regionProvider = new DefaultAwsRegionProviderChain()
   val awsS3Client: AmazonS3 = AmazonS3ClientBuilder.standard().build()
 
-  def s3Iterable(bucketName: String, initialStartAfter: Option[String]): scala.collection.immutable.Iterable[S3ObjectSummary] = new scala.collection.immutable.Iterable[S3ObjectSummary] {
+  def s3Iterable(bucketName: String, initialStartAfter: Option[String]) = new Iterable[S3ObjectSummary] {
     override def iterator = new Iterator[S3ObjectSummary] {
       var items: List[S3ObjectSummary] = List.empty
       var continuationToken: Option[String] = Some(null)
@@ -88,11 +89,9 @@ object Main extends App {
         }
       }.recoverWith {
         case _ if retry < 3 =>
-          println(s"Retry: $retry for $srcKey")
+          system.log.warning(s"Retry: $retry for $srcKey")
           performAction(retry + 1)
-        case ex =>
-          println(s"failed after 3 retries for $srcKey")
-          Future.failed(ex)
+        case ex => Future.failed(ex)
       }
 
     performAction()
@@ -115,6 +114,7 @@ object Main extends App {
           case Success(_) => println("All Done!")
           case Failure(ex) => system.log.error(ex, "Failed :(")
         }
+
         system.terminate()
       }
   }
